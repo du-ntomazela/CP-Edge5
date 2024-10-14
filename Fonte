@@ -1,35 +1,54 @@
-#include<DHT.h>
-#include<ArduinoJson.h>
+#include<Servo.h>
 
-#define DHTPIN 7
-#define DHTTYPE DHT11
+#define led 4
+#define trigger 7
+#define echo 8
+#define ServoPin 6
 
-DHT dht(DHTPIN, DHTTYPE);
+int dist = 0;
 
+Servo myServo;
 
 void setup() {
-    dht.begin();
-    Serial.begin(9600);
+  pinMode(led, OUTPUT);
+  pinMode(trigger, OUTPUT);
+  pinMode(echo, INPUT);
+  pinMode(ServoPin, OUTPUT);
+  Serial.begin(9600);
 
+  myServo.attach(ServoPin);
 
 }
 
 void loop() {
-    
-    // Aloca um buffer de espaço para um objeto JSON
-    StaticJsonDocument<100>json;
 
-    float temp = dht.readTemperature();
-    float umi = dht.readHumidity();
+  digitalWrite(trigger, LOW);
+  delayMicroseconds(5);
+  digitalWrite(trigger, HIGH);
+  delayMicroseconds(10);
+  
 
-    //Escrita JSON
-    json["Temperatura"] = temp;
-    json["Umidade"] = umi;
-    serializeJson(json, Serial);  
-    Serial.println();
+  dist = pulseIn(echo, HIGH);
+  dist = dist/58;
 
-    delay(3000);
-
-
-
+  if(Serial.available()>0){
+      char comando = Serial.read();
+      if(comando == 'M'){
+        myServo.write(90); 
+      }
+      else if( comando == 'L'){
+        myServo.write(0);
+      }
+      else if(comando == 'R'){
+        myServo.write(180);
+      }
+      else if( comando == 'A'){
+        digitalWrite(led, HIGH);
+      }
+      else if( comando == 'D'){
+        digitalWrite(led, LOW);
+      }
+  }
+  Serial.println(dist);
+  delay(1000);
 }
